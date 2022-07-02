@@ -1,6 +1,11 @@
+// "SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 contract GToken {
+    using SafeMath for uint256;
+
     mapping (address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowed;
     uint256 totalSupply_;
@@ -8,7 +13,7 @@ contract GToken {
     event Transfer(address sender, address receiver, uint256 amount);
     event Approval(address owner, address delegate, uint256 amount);
 
-    constructor (uint256 total) public {
+    constructor (uint256 total) {
         totalSupply_ = total;
         balances[msg.sender] = totalSupply_;
     }
@@ -26,9 +31,9 @@ contract GToken {
     // TODO: Transfer Tokens to another account
     function transfer (address receiver, uint256 amount) public returns (bool) {
         require(amount <= balanceOf(msg.sender));
-        balances[receiver] += amount;
-        balances[msg.sender] -= amount;
-        emit (msg.sender, receiver, amount);
+        balances[msg.sender].sub(amount);
+        balances[receiver].add(amount);
+        emit Transfer(msg.sender, receiver, amount);
         return true;
     }
 
@@ -45,9 +50,9 @@ contract GToken {
     function transferFrom(address owner, address buyer, uint256 amount) public returns (bool) {
         require(amount <= balanceOf(owner));
         require(amount <= allowed[owner][msg.sender]);
-        balances[owner] -= amount;
-        allowed[owner][msg.sender] -= amount;
-        balances[buyer] += amount;
+        balances[owner].sub(amount);
+        allowed[owner][msg.sender].sub(amount);
+        balances[buyer].add(amount);
         emit Transfer(owner, buyer, amount);
         return true;
     }
